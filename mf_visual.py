@@ -1,5 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from surprise import Reader, Dataset, accuracy
+from surprise import SVD
 
 def matrix_factorization(data, m, n, k, lamb, eta, epochs, biased=False):
     f_U = np.ones(m)
@@ -7,7 +9,7 @@ def matrix_factorization(data, m, n, k, lamb, eta, epochs, biased=False):
     # for i, j, _ in data:
     #     f_U[i] += 1
     #     f_V[j] += 1
-    N = len(data)
+    N = data.shape[0]
 
     U = np.random.rand(k, m) - 0.5
     V = np.random.rand(k, n) - 0.5
@@ -62,23 +64,33 @@ def plot(lambs, errs, title):
     plt.ylabel('Mean squared error (MSE)')
     plt.savefig('figures/' + title)
 
-Y_train = np.loadtxt('data/train.txt', '\t') - np.array([1, 1, 0])
-Y_test = np.loadtxt('data/test.txt', '\t') - np.array([1, 1, 0])
+k = 20
 
-mu = np.mean(Y_train[:, 2])
-lambs = np.logspace(-4, 0, 5)
-epochs = 100
-errs_unbiased = np.zeros(len(lambs))
-errs_biased = np.zeros(len(lambs))
-for iteration, lamb in enumerate(lambs):
-    U_ub, V_ub, _, _ = matrix_factorization(Y_train, 943, 1682, 20, lamb, 0.03, epochs)
-    U_b, V_b, A_b, B_b = matrix_factorization(Y_train, 943, 1682, 20, lamb, 0.03, epochs, True)
-    err_unbiased = score(Y_test, U_ub, V_ub)
-    err_biased = score(Y_test, U_b, V_b, True, A_b, B_b, mu)
-    errs_unbiased[iteration] = err_unbiased
-    errs_biased[iteration] = err_biased
-    print('Test error (biased):', err_biased)
-    print('Test error (unbiased):', err_unbiased)
+# Y_train = np.loadtxt('data/train.txt', '\t') - np.array([1, 1, 0])
+# Y_test = np.loadtxt('data/test.txt', '\t') - np.array([1, 1, 0])
+#
+# mu = np.mean(Y_train[:, 2])
+# lambs = np.logspace(-4, 0, 5)
+# epochs = 100
+# errs_unbiased = np.zeros(len(lambs))
+# errs_biased = np.zeros(len(lambs))
+# for iteration, lamb in enumerate(lambs):
+#     U_ub, V_ub, _, _ = matrix_factorization(Y_train, 943, 1682, k, lamb, 0.03, epochs)
+#     U_b, V_b, A_b, B_b = matrix_factorization(Y_train, 943, 1682, k, lamb, 0.03, epochs, True)
+#     err_unbiased = score(Y_test, U_ub, V_ub)
+#     err_biased = score(Y_test, U_b, V_b, True, A_b, B_b, mu)
+#     errs_unbiased[iteration] = err_unbiased
+#     errs_biased[iteration] = err_biased
+#     print('Test error (biased):', err_biased)
+#     print('Test error (unbiased):', err_unbiased)
+#
+# plot(lambs, errs_unbiased, 'Unbiased')
+# plot(lambs, errs_biased, 'Biased')
 
-plot(lambs, errs_unbiased, 'Unbiased')
-plot(lambs, errs_biased, 'Biased')
+reader = Reader()
+data_train = Dataset.load_from_file('data/train.txt', reader=reader).build_full_trainset()
+data_test = Dataset.load_from_file('data/test.txt', reader=reader).build_full_trainset().build_testset()
+model = SVD(n_factors=k)
+model.fit(data_train)
+accuracy.rmse(model.test(data_test))
+V = model.qi
