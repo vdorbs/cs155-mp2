@@ -33,7 +33,7 @@ def matrix_factorization(data, m, n, k, lamb, eta, epochs, biased=False):
                 B[j] -= eta * (lamb / f_V[j] * B[j] - ((y - mu) - (np.dot(U[:, i], V[:, j]) + A[i] + B[j])))
         err = get_err(data, U, V, A, B, mu, N, lamb)
         print('EPOCH', epoch + 1, err)
-        change = np.abs(err - prev_err)
+        change = prev_err - err
         prev_err = err
         if epoch == 0:
             first_change = change
@@ -53,7 +53,7 @@ def score(data, U, V, biased=False, A=None, B=None, mu=None):
         B = np.zeros(V.shape[1])
         mu = 0
 
-    err = sum([((y - mu) - (np.dot(U[:, i], V[:, j]) + A[i] + B[j])) ** 2 for i, j, y in data])
+    err = 0.5 * sum([((y - mu) - (np.dot(U[:, i], V[:, j]) + A[i] + B[j])) ** 2 for i, j, y in data])
     return err / len(data)
 
 def plot(lambs, errs, title):
@@ -88,8 +88,8 @@ for iteration, lamb in enumerate(lambs):
     print('Test error (biased):', err_biased)
     print('Test error (unbiased):', err_unbiased)
 
-# plot(lambs, errs_unbiased, 'Unbiased')
-# plot(lambs, errs_biased, 'Biased')
+plot(lambs, errs_unbiased, 'Unbiased')
+plot(lambs, errs_biased, 'Biased')
 
 reader = Reader()
 data_train = Dataset.load_from_file('data/train.txt', reader=reader).build_full_trainset()
