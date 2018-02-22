@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 from surprise import Reader, Dataset, accuracy
 from surprise import SVD
 
+from get_best_and_popular import get_best_and_popular
+
 def matrix_factorization(data, m, n, k, lamb, eta, epochs, biased=False):
     f_U = np.ones(m)
     f_V = np.ones(n)
@@ -99,12 +101,19 @@ model.fit(data_train)
 accuracy.rmse(model.test(data_test))
 V = model.qi.T
 
+best, most_popular = get_best_and_popular()
+movie_selection = {
+    'Best Movies': best,
+    'Most Popular Movies': most_popular
+}
+
 Vs = [V_ub, V_b, V]
 titles = ['Unbiased Projection', 'Biased Projection', 'Surprise Projection']
 for V, title in zip(Vs, titles):
     P = projection(V)
     projs = np.dot(P.T, V)
-    plt.figure()
-    plt.plot(projs[0], projs[1], '.')
-    plt.title(title)
-    plt.savefig('figures/' + title)
+    for selection, indices in movie_selection.items():
+        plt.figure()
+        plt.plot(projs[0][indices], projs[1][indices], '.')
+        plt.title('{} — {}'.format(title, selection))
+        plt.savefig('figures/' + title)
