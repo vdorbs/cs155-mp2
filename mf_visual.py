@@ -78,7 +78,7 @@ Y_train = np.loadtxt('data/train.txt', '\t') - np.array([1, 1, 0])
 Y_test = np.loadtxt('data/test.txt', '\t') - np.array([1, 1, 0])
 
 mu = np.mean(Y_train[:, 2])
-epochs = 100
+epochs = 3#100
 lamb = 1
 U_ub, V_ub, _, _ = matrix_factorization(Y_train, 943, 1682, k, lamb, 0.03, epochs)
 U_b, V_b, A_b, B_b = matrix_factorization(Y_train, 943, 1682, k, lamb, 0.03, epochs, True)
@@ -112,11 +112,13 @@ for V, title in zip(Vs, titles):
     P = projection(V)
     projs = np.dot(P.T, V)
     for selection, indices in movie_selection.items():
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=(10, 10))
         color = [ratings_by_id[i] for i in indices]
-        piss = ax.scatter(projs[0][indices], projs[1][indices], c=color)#, cmap=colormap)
+        scatter = ax.scatter(projs[0][indices], projs[1][indices], c=color)
         for i in indices:
-            ax.annotate(movie_titles[i], (projs[0][i], projs[1][i]), (projs[0][i]*1.1, projs[1][i]*1.1))
-        fig.colorbar(piss, ax=ax)
+            ax.annotate(movie_titles[i],
+                        (projs[0][i], projs[1][i]),
+                        xytext=(projs[0][i] - 0.005, projs[1][i] - 0.003))
+        fig.colorbar(scatter, ax=ax, orientation='horizontal')
         plt.title('{} — {}'.format(title, selection))
         plt.savefig('figures/{} {}'.format(title, selection))
