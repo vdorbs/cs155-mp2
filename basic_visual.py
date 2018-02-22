@@ -18,6 +18,15 @@ def parse_ids_by_genre(path):
                     ids_by_genre[GENRE_LIST[idx]].append(movie_id)
     return ids_by_genre
 
+def get_ratings_by_id():
+    data = np.loadtxt('data/data.txt', delimiter='\t')
+    ratings_by_id = {movie_id:[] for _, movie_id, _ in data}
+    for _, movie_id, rating in data:
+        ratings_by_id[movie_id].append(rating)
+    for k, v, in ratings_by_id.items():
+        ratings_by_id[k] = sum(v) / len(v)
+    return ratings_by_id
+
 def do_many_things():
     data = np.loadtxt('data/data.txt', delimiter='\t')
     ids_by_genre = parse_ids_by_genre('data/movies.txt')
