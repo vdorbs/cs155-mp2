@@ -4,6 +4,8 @@ from surprise import Reader, Dataset, accuracy
 from surprise import SVD
 
 from get_best_and_popular import get_best_and_popular
+from basic_visual import get_ratings_by_id
+
 
 def matrix_factorization(data, m, n, k, lamb, eta, epochs, biased=False):
     f_U = np.zeros(m)
@@ -75,24 +77,6 @@ k = 20
 Y_train = np.loadtxt('data/train.txt', '\t') - np.array([1, 1, 0])
 Y_test = np.loadtxt('data/test.txt', '\t') - np.array([1, 1, 0])
 
-# mu = np.mean(Y_train[:, 2])
-# lambs = np.logspace(-4, 0, 5)
-# epochs = 100
-# errs_unbiased = np.zeros(len(lambs))
-# errs_biased = np.zeros(len(lambs))
-# for iteration, lamb in enumerate(lambs):
-#     U_ub, V_ub, _, _ = matrix_factorization(Y_train, 943, 1682, k, lamb, 0.03, epochs)
-#     U_b, V_b, A_b, B_b = matrix_factorization(Y_train, 943, 1682, k, lamb, 0.03, epochs, True)
-#     err_unbiased = score(Y_test, U_ub, V_ub)
-#     err_biased = score(Y_test, U_b, V_b, True, A_b, B_b, mu)
-#     errs_unbiased[iteration] = err_unbiased
-#     errs_biased[iteration] = err_biased
-#     print('Test error (biased):', err_biased)
-#     print('Test error (unbiased):', err_unbiased)
-#
-# plot(lambs, errs_unbiased, 'Unbiased')
-# plot(lambs, errs_biased, 'Biased')
-
 mu = np.mean(Y_train[:, 2])
 epochs = 100
 lamb = 1
@@ -118,13 +102,21 @@ movie_selection = {
     'Most Popular Movies': most_popular
 }
 
+ratings_by_id = get_ratings_by_id()
+movie_titles = np.loadtxt('data/movies.txt', dtype=str, delimiter='\t')[:,1]
+colormap = plt.cm.get_cmap('viridis')
+
 Vs = [V_ub, V_b, V]
 titles = ['Unbiased Projection', 'Biased Projection', 'Surprise Projection']
 for V, title in zip(Vs, titles):
     P = projection(V)
     projs = np.dot(P.T, V)
     for selection, indices in movie_selection.items():
-        plt.figure()
-        plt.plot(projs[0][indices], projs[1][indices], '.')
+        fig, ax = plt.subplots()
+        color = [ratings_by_id[i] for i in indices]
+        piss = ax.scatter(projs[0][indices], projs[1][indices], c=color)#, cmap=colormap)
+        for i in indices:
+            ax.annotate(movie_titles[i], (projs[0][i], projs[1][i]), (projs[0][i]*1.1, projs[1][i]*1.1))
+        fig.colorbar(piss, ax=ax)
         plt.title('{} — {}'.format(title, selection))
-        plt.savefig('figures/' + title)
+        plt.savefig('figures/{} {}'.format(title, selection))
