@@ -78,7 +78,7 @@ Y_train = np.loadtxt('data/train.txt', '\t') - np.array([1, 1, 0])
 Y_test = np.loadtxt('data/test.txt', '\t') - np.array([1, 1, 0])
 
 mu = np.mean(Y_train[:, 2])
-epochs = 3#100
+epochs = 100
 lamb = 1
 U_ub, V_ub, _, _ = matrix_factorization(Y_train, 943, 1682, k, lamb, 0.03, epochs)
 U_b, V_b, A_b, B_b = matrix_factorization(Y_train, 943, 1682, k, lamb, 0.03, epochs, True)
