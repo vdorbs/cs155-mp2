@@ -102,6 +102,21 @@ movie_selection = {
     'Most Popular Movies': most_popular
 }
 
+def scatterplot(x, y, color, indices, title):
+    fig, ax = plt.subplots(figsize=(10, 10))
+    scale_x = max(x[indices]) - min(x[indices])
+    scale_y = max(y[indices]) - min(y[indices])
+    scatter = ax.scatter(x[indices], y[indices], c=color)
+    for i in indices:
+        ax.annotate(movie_titles[i + 1],
+                    (x[i], y[i]),
+                    xytext=(x[i] - scale_x/10, y[i] - scale_y/20))
+    fig.colorbar(scatter, ax=ax, orientation='horizontal')
+    plt.title('{} — {}'.format(title, selection))
+    plt.savefig('figures/{} {}'.format(title, selection))
+
+
+
 ratings_by_id = get_ratings_by_id()
 movie_titles = np.loadtxt('data/movies.txt', dtype=str, delimiter='\t')[:,1]
 colormap = plt.cm.get_cmap('viridis')
@@ -112,13 +127,5 @@ for V, title in zip(Vs, titles):
     P = projection(V)
     projs = np.dot(P.T, V)
     for selection, indices in movie_selection.items():
-        fig, ax = plt.subplots(figsize=(10, 10))
         color = [ratings_by_id[i] for i in indices]
-        scatter = ax.scatter(projs[0][indices], projs[1][indices], c=color)
-        for i in indices:
-            ax.annotate(movie_titles[i],
-                        (projs[0][i], projs[1][i]),
-                        xytext=(projs[0][i] - 0.005, projs[1][i] - 0.003))
-        fig.colorbar(scatter, ax=ax, orientation='horizontal')
-        plt.title('{} — {}'.format(title, selection))
-        plt.savefig('figures/{} {}'.format(title, selection))
+        scatterplot(projs[0], projs[1], color, indices, title)
