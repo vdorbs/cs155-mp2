@@ -103,12 +103,14 @@ movie_selection = {
 }
 
 def scatterplot(x, y, color, indices, title):
+    indices = [i - 1 for i in indices]
+    print(indices)
     fig, ax = plt.subplots(figsize=(10, 10))
     scale_x = max(x[indices]) - min(x[indices])
     scale_y = max(y[indices]) - min(y[indices])
     scatter = ax.scatter(x[indices], y[indices], c=color)
     for i in indices:
-        ax.annotate(movie_titles[i + 1],
+        ax.annotate(movie_titles[i],
                     (x[i], y[i]),
                     xytext=(x[i] - scale_x/10, y[i] - scale_y/20))
     fig.colorbar(scatter, ax=ax, orientation='horizontal')
