@@ -2,9 +2,12 @@ cycler==0.10.0
 joblib==0.11
 matplotlib==2.1.2
 numpy==1.14.0
+pandas==0.22.0
 pyparsing==2.2.0
 python-dateutil==2.6.1
 pytz==2018.3
 scikit-surprise==1.0.5
+scipy==1.0.0
+seaborn==0.8.1
 six==1.11.0
 surprise==0.1
