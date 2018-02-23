@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from surprise import Reader, Dataset, accuracy
-from surprise import SVD
+from surprise import Dataset, accuracy, SVD
+from surprise.model_selection import train_test_split
 
 from get_best_and_popular import get_best_and_popular
 from basic_visual import get_ratings_by_id
@@ -87,9 +87,8 @@ err_biased = score(Y_test, U_b, V_b, True, A_b, B_b, mu)
 print('Test error (biased):', err_biased)
 print('Test error (unbiased):', err_unbiased)
 
-reader = Reader()
-data_train = Dataset.load_from_file('data/train.txt', reader=reader).build_full_trainset()
-data_test = Dataset.load_from_file('data/test.txt', reader=reader).build_full_trainset().build_testset()
+data_surprise = Dataset.load_builtin('ml-100k')
+data_train, data_test = train_test_split(data_surprise, test_size=0.1)
 model = SVD(n_factors=k)
 model.fit(data_train)
 rmse = accuracy.rmse(model.test(data_test))
