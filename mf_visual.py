@@ -81,7 +81,7 @@ Y_train = np.loadtxt('data/train.txt', '\t') - np.array([1, 1, 0])
 Y_test = np.loadtxt('data/test.txt', '\t') - np.array([1, 1, 0])
 
 mu = np.mean(Y_train[:, 2])
-epochs = 3
+epochs = 100
 lamb = 1
 U_ub, V_ub, _, _ = matrix_factorization(Y_train, 943, 1682, k, lamb, 0.03, epochs)
 U_b, V_b, A_b, B_b = matrix_factorization(Y_train, 943, 1682, k, lamb, 0.03, epochs, True)
@@ -96,6 +96,9 @@ model = SVD(n_factors=k)
 model.fit(data_train)
 rmse = accuracy.rmse(model.test(data_test))
 print('Test error (SVD):', rmse ** 2 / 2)
+model = SVD(n_factors=k)
+data_full = data_surprise.build_full_trainset()
+model.fit(data_full)
 V = model.qi.T
 
 best, most_popular = get_best_and_popular()
@@ -158,10 +161,11 @@ for V, title in zip(Vs, titles):
         subject_ys.append(y_average)
 
         #ax = sns.kdeplot(projs[0][movies], projs[1][movies], n_levels=5, cmap=cpal, 
-                         #cut=10, alpha=.5, shade=True, shade_lowest=False)
-    ax = sns.regplot(subject_xs, subject_ys)
+        #                 cut=10, alpha=.5, shade=True, shade_lowest=False)
+    plb.scatter(subject_xs, subject_ys)
     for (m, x, y, c) in zip(movie_subject_names, subject_xs, subject_ys, colors):
-        ax.text(x, y, m, horizontalalignment='left', size='medium', color=c, weight='semibold')
+        plb.annotate(m, (x, y))
+    plb.title('Projection of Genre Averages')
     plb.show()
     continue
     
