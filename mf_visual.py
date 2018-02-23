@@ -1,7 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from surprise import Reader, Dataset, accuracy
-from surprise import SVD
+import matplotlib.pylab as plb
+import seaborn as sns
+import matplotlib.cm as cm
+from surprise import Dataset, accuracy, SVD
+from surprise.model_selection import train_test_split
 
 from get_best_and_popular import get_best_and_popular
 from basic_visual import get_ratings_by_id
@@ -87,13 +90,15 @@ err_biased = score(Y_test, U_b, V_b, True, A_b, B_b, mu)
 print('Test error (biased):', err_biased)
 print('Test error (unbiased):', err_unbiased)
 
-reader = Reader()
-data_train = Dataset.load_from_file('data/train.txt', reader=reader).build_full_trainset()
-data_test = Dataset.load_from_file('data/test.txt', reader=reader).build_full_trainset().build_testset()
+data_surprise = Dataset.load_builtin('ml-100k')
+data_train, data_test = train_test_split(data_surprise, test_size=0.1)
 model = SVD(n_factors=k)
 model.fit(data_train)
 rmse = accuracy.rmse(model.test(data_test))
 print('Test error (SVD):', rmse ** 2 / 2)
+model = SVD(n_factors=k)
+data_full = data_surprise.build_full_trainset()
+model.fit(data_full)
 V = model.qi.T
 
 best, most_popular = get_best_and_popular()
@@ -121,7 +126,20 @@ def scatterplot(x, y, color, selection, indices, title):
 
 
 ratings_by_id = get_ratings_by_id()
-movie_titles = np.loadtxt('data/movies.txt', dtype=str, delimiter='\t')[:,1]
+movie_data = np.loadtxt('data/movies.txt', dtype=str, delimiter='\t')
+movie_titles = movie_data[:,1]
+movie_genres = movie_data[:, 2:]
+movies_with_genre = list()
+number_of_movie_genres = len(movie_genres[0])
+
+for i in range(number_of_movie_genres):
+    movies_with_genre.append(list())
+    for j, movie in enumerate(movie_genres):
+        if movie[i] == '1':
+            movies_with_genre[i].append(int(j))
+
+movie_subject_names = ['Unknown', 'Action', 'Adventure', 'Animation', 'Childrens', 'Comedy', 'Crime', 'Documentary',
+'Drama', 'Fantasy', 'Film-Noir', 'Horror', 'Musical', 'Mystery', 'Romance', 'Sci-Fi', 'Thriller', 'War', 'Western']
 colormap = plt.cm.get_cmap('viridis')
 
 Vs = [V_ub, V_b, V]
@@ -129,6 +147,30 @@ titles = ['Unbiased Projection', 'Biased Projection', 'Surprise Projection']
 for V, title in zip(Vs, titles):
     P = projection(V)
     projs = np.dot(P.T, V)
+    # Generate average points:
+    subject_xs = []
+    subject_ys = []
+
+    colors = sns.hls_palette(len(movies_with_genre), l=.4, s=1.0)
+    cpals = [sns.light_palette(c, as_cmap=True) for c in colors]
+    print("I am TChala")
+    ax = None
+    for movies, cpal in zip(movies_with_genre, cpals):
+        x_average = np.average(projs[0][movies])
+        y_average = np.average(projs[1][movies])
+        subject_xs.append(x_average)
+        subject_ys.append(y_average)
+
+        #ax = sns.kdeplot(projs[0][movies], projs[1][movies], n_levels=5, cmap=cpal, 
+        #                 cut=10, alpha=.5, shade=True, shade_lowest=False)
+    plb.scatter(subject_xs, subject_ys)
+    for (m, x, y, c) in zip(movie_subject_names, subject_xs, subject_ys, colors):
+        plb.annotate(m, (x, y))
+    plb.title('Projection of Genre Averages')
+    plb.show()
+    continue
+    
+
     for selection, indices in movie_selection.items():
         color = [ratings_by_id[i] for i in indices]
         scatterplot(projs[0], projs[1], color, selection, indices, title)
