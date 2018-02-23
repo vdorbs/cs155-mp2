@@ -102,18 +102,19 @@ movie_selection = {
     'Most Popular Movies': most_popular
 }
 
-def scatterplot(x, y, color, indices, title):
+def scatterplot(x, y, color, selection, indices, title):
     indices = [i - 1 for i in indices]
     fig, ax = plt.subplots(figsize=(10, 10))
     scale_x = max(x[indices]) - min(x[indices])
     scale_y = max(y[indices]) - min(y[indices])
     scatter = ax.scatter(x[indices], y[indices], c=color, s=75)
-    for i in indices:
-        ax.annotate(movie_titles[i],
-                    (x[i], y[i]),
-                    xytext=(x[i] - scale_x/10, y[i] - scale_y/20))
-    cb = fig.colorbar(scatter, ax=ax, orientation='horizontal')
-    cb.set_label('Average rating')
+    if selection != 'Best Movies':
+        for i in indices:
+            ax.annotate(movie_titles[i],
+                        (x[i], y[i]),
+                        xytext=(x[i] - scale_x/10, y[i] - scale_y/20))
+        cb = fig.colorbar(scatter, ax=ax, orientation='horizontal')
+        cb.set_label('Average rating')
     plt.title('{} — {}'.format(title, selection))
     plt.savefig('figures/{} {}'.format(title, selection))
 
@@ -130,4 +131,4 @@ for V, title in zip(Vs, titles):
     projs = np.dot(P.T, V)
     for selection, indices in movie_selection.items():
         color = [ratings_by_id[i] for i in indices]
-        scatterplot(projs[0], projs[1], color, indices, title)
+        scatterplot(projs[0], projs[1], color, selection, indices, title)
