@@ -78,7 +78,7 @@ Y_train = np.loadtxt('data/train.txt', '\t') - np.array([1, 1, 0])
 Y_test = np.loadtxt('data/test.txt', '\t') - np.array([1, 1, 0])
 
 mu = np.mean(Y_train[:, 2])
-epochs = 100
+epochs = 1
 lamb = 1
 U_ub, V_ub, _, _ = matrix_factorization(Y_train, 943, 1682, k, lamb, 0.03, epochs)
 U_b, V_b, A_b, B_b = matrix_factorization(Y_train, 943, 1682, k, lamb, 0.03, epochs, True)
@@ -93,6 +93,9 @@ model = SVD(n_factors=k)
 model.fit(data_train)
 rmse = accuracy.rmse(model.test(data_test))
 print('Test error (SVD):', rmse ** 2 / 2)
+model = SVD(n_factors=k)
+data_full = data_surprise.build_full_trainset()
+model.fit(data_full)
 V = model.qi.T
 
 best, most_popular = get_best_and_popular()
