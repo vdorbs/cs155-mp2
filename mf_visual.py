@@ -1,10 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.pylab as plb
-from surprise import Reader, Dataset, accuracy
-from surprise import SVD
 import seaborn as sns
 import matplotlib.cm as cm
+from surprise import Dataset, accuracy, SVD
+from surprise.model_selection import train_test_split
 
 from get_best_and_popular import get_best_and_popular
 from basic_visual import get_ratings_by_id
@@ -90,12 +90,8 @@ err_biased = score(Y_test, U_b, V_b, True, A_b, B_b, mu)
 print('Test error (biased):', err_biased)
 print('Test error (unbiased):', err_unbiased)
 
-reader = Reader()
-data_train = Dataset.load_from_file('data/train.txt', reader=reader).build_full_trainset()
-print(data_train.n_users)
-print(data_train.n_items)
-print(data_train.n_ratings)
-data_test = Dataset.load_from_file('data/test.txt', reader=reader).build_full_trainset().build_testset()
+data_surprise = Dataset.load_builtin('ml-100k')
+data_train, data_test = train_test_split(data_surprise, test_size=0.1)
 model = SVD(n_factors=k)
 model.fit(data_train)
 rmse = accuracy.rmse(model.test(data_test))
@@ -108,6 +104,23 @@ movie_selection = {
     'Most Popular Movies': most_popular
 }
 
+def scatterplot(x, y, color, indices, title):
+    indices = [i - 1 for i in indices]
+    fig, ax = plt.subplots(figsize=(10, 10))
+    scale_x = max(x[indices]) - min(x[indices])
+    scale_y = max(y[indices]) - min(y[indices])
+    scatter = ax.scatter(x[indices], y[indices], c=color, s=75)
+    for i in indices:
+        ax.annotate(movie_titles[i],
+                    (x[i], y[i]),
+                    xytext=(x[i] - scale_x/10, y[i] - scale_y/20))
+    cb = fig.colorbar(scatter, ax=ax, orientation='horizontal')
+    cb.set_label('Average rating')
+    plt.title('{} — {}'.format(title, selection))
+    plt.savefig('figures/{} {}'.format(title, selection))
+
+
+
 ratings_by_id = get_ratings_by_id()
 movie_data = np.loadtxt('data/movies.txt', dtype=str, delimiter='\t')
 movie_titles = movie_data[:,1]
@@ -117,7 +130,7 @@ number_of_movie_genres = len(movie_genres[0])
 
 for i in range(number_of_movie_genres):
     movies_with_genre.append(list())
-    for j, movie in movie_genres:
+    for j, movie in enumerate(movie_genres):
         if movie[i] == '1':
             movies_with_genre[i].append(int(j))
 
@@ -144,21 +157,15 @@ for V, title in zip(Vs, titles):
         subject_xs.append(x_average)
         subject_ys.append(y_average)
 
-        ax = sns.kdeplot(projs[0][movies], projs[1][movies], n_levels=5, cmap=cpal, 
-                         cut=10, alpha=.5, shade=True, shade_lowest=False)
-    
+        #ax = sns.kdeplot(projs[0][movies], projs[1][movies], n_levels=5, cmap=cpal, 
+                         #cut=10, alpha=.5, shade=True, shade_lowest=False)
+    ax = sns.regplot(subject_xs, subject_ys)
     for (m, x, y, c) in zip(movie_subject_names, subject_xs, subject_ys, colors):
-        ax.text(x, y, m, horizontalalignment='center', size='medium', color=c, weight='semibold')
+        ax.text(x, y, m, horizontalalignment='left', size='medium', color=c, weight='semibold')
     plb.show()
     continue
     
 
     for selection, indices in movie_selection.items():
-        fig, ax = plt.subplots()
         color = [ratings_by_id[i] for i in indices]
-        piss = ax.scatter(projs[0][indices], projs[1][indices], c=color)#, cmap=colormap)
-        for i in indices:
-            ax.annotate(movie_titles[i], (projs[0][i], projs[1][i]), (projs[0][i]*1.1, projs[1][i]*1.1))
-        fig.colorbar(piss, ax=ax)
-        plt.title('{} — {}'.format(title, selection))
-        plt.savefig('figures/{} {}'.format(title, selection))
+        scatterplot(projs[0], projs[1], color, indices, title)
