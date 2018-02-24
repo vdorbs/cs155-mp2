@@ -150,6 +150,7 @@ for V, title in zip(Vs, titles):
     # Generate average points:
     subject_xs = []
     subject_ys = []
+    subject_std_devs = []
 
     colors = sns.hls_palette(len(movies_with_genre), l=.4, s=1.0)
     cpals = [sns.light_palette(c, as_cmap=True) for c in colors]
@@ -158,18 +159,21 @@ for V, title in zip(Vs, titles):
     for movies, cpal in zip(movies_with_genre, cpals):
         x_average = np.average(projs[0][movies])
         y_average = np.average(projs[1][movies])
+        mu = np.array([[x_average], [y_average]])
+        std_dev = 1e4 / (len(movies) - 1) * np.linalg.norm(projs[:, movies] - mu)
         subject_xs.append(x_average)
         subject_ys.append(y_average)
+        subject_std_devs.append(std_dev)
 
-        #ax = sns.kdeplot(projs[0][movies], projs[1][movies], n_levels=5, cmap=cpal, 
+        #ax = sns.kdeplot(projs[0][movies], projs[1][movies], n_levels=5, cmap=cpal,
         #                 cut=10, alpha=.5, shade=True, shade_lowest=False)
-    plb.scatter(subject_xs, subject_ys)
+    plb.scatter(subject_xs, subject_ys, s=subject_std_devs, alpha=0.4)
     for (m, x, y, c) in zip(movie_subject_names, subject_xs, subject_ys, colors):
         plb.annotate(m, (x, y))
     plb.title('Projection of Genre Averages')
     plb.show()
     continue
-    
+
 
     for selection, indices in movie_selection.items():
         color = [ratings_by_id[i] for i in indices]
