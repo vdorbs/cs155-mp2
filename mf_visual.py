@@ -7,7 +7,7 @@ from surprise import Dataset, accuracy, SVD
 from surprise.model_selection import train_test_split
 
 from get_best_and_popular import get_best_and_popular
-from basic_visual import get_ratings_by_id
+from basic_visual import get_ratings_by_id, get_ratings_by_genres
 
 
 def matrix_factorization(data, m, n, k, lamb, eta, epochs, biased=False):
@@ -151,6 +151,9 @@ for V, title in zip(Vs, titles):
     subject_xs = []
     subject_ys = []
 
+    ratings = get_ratings_by_genres()
+    ratings = [ratings[g] for g in movie_subject_names]
+
     colors = sns.hls_palette(len(movies_with_genre), l=.4, s=1.0)
     cpals = [sns.light_palette(c, as_cmap=True) for c in colors]
     print("I am TChala")
@@ -161,15 +164,17 @@ for V, title in zip(Vs, titles):
         subject_xs.append(x_average)
         subject_ys.append(y_average)
 
-        #ax = sns.kdeplot(projs[0][movies], projs[1][movies], n_levels=5, cmap=cpal, 
+        #ax = sns.kdeplot(projs[0][movies], projs[1][movies], n_levels=5, cmap=cpal,
         #                 cut=10, alpha=.5, shade=True, shade_lowest=False)
-    plb.scatter(subject_xs, subject_ys)
+    plb.scatter(subject_xs, subject_ys, c=ratings)
     for (m, x, y, c) in zip(movie_subject_names, subject_xs, subject_ys, colors):
         plb.annotate(m, (x, y))
+    cb = plb.colorbar(orientation='horizontal')
+    cb.set_label('Average rating')
     plb.title('Projection of Genre Averages')
-    plb.show()
+    plb.savefig('figures/{} Genres'.format(title))
     continue
-    
+
 
     for selection, indices in movie_selection.items():
         color = [ratings_by_id[i] for i in indices]
