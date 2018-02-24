@@ -9,7 +9,7 @@ def parse_ids_by_genre(path):
         'Sci-Fi', 'Thriller', 'War', 'Western'
     ]
     ids_by_genre = {genre:[] for genre in GENRE_LIST}
-    with open('data/movies.txt', 'r') as fid:
+    with open(path, 'r') as fid:
         for line in fid:
             line = line.rstrip('\n').split('\t')
             movie_id = int(line[0])
@@ -26,6 +26,19 @@ def get_ratings_by_id():
     for k, v, in ratings_by_id.items():
         ratings_by_id[k] = sum(v) / len(v)
     return ratings_by_id
+
+def get_ratings_by_genres():
+    data = np.loadtxt('data/data.txt', delimiter='\t')
+    ids_by_genre = parse_ids_by_genre('data/movies.txt')
+    ratings_by_genre = {}
+    for genre, movies in ids_by_genre.items():
+        ratings = []
+        for d in data:
+            if d[1] in movies:
+                ratings.append(int(d[2]))
+        ratings_by_genre[genre] = sum(ratings) / len(ratings)
+
+    return ratings_by_genre
 
 def do_many_things():
     data = np.loadtxt('data/data.txt', delimiter='\t')
